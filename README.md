@@ -141,6 +141,7 @@ Run:
 ### ML service (Render, Python — no Docker)
 
 - Deploy `ml-service/` as a Python web service
+- Set Python version to **3.12.x** (Render’s latest Python may be too new and can force source builds for `pydantic-core`)
 - Build command: `pip install -r requirements.txt`
 - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 - Optional (recommended): set env `ML_SERVICE_TOKEN` to a strong random string.
