@@ -95,7 +95,13 @@ If you don’t want the Python service, set `ML_MODE=local` in `backend/.env` (b
 
 `npm -C backend run seed:admin`
 
-Defaults: `admin@backtoyou.local` / `admin12345`.
+Defaults come from `backend/.env`:
+
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `ADMIN_LOGIN_SECRET` (required for admin login)
+
+You can reset the seeded admin password by setting `RESET_ADMIN_PASSWORD=1` and re-running the seed script.
 
 ## Smoke test (end-to-end)
 
@@ -112,6 +118,34 @@ Run:
 
 - Images use Cloudinary if `CLOUDINARY_URL` is set; otherwise stored in `backend/uploads/`.
 - Emails are logged to the console unless SMTP env vars are configured.
+
+## Production deploy (Vercel + Render + Python ML service)
+
+### Frontend (Vercel)
+
+- Deploy `frontend/`
+- Set env `VITE_API_BASE_URL` to your Render backend URL, e.g. `https://backtoyou-backend.onrender.com`
+
+### Backend (Render)
+
+- Deploy `backend/` as a Node web service
+- Ensure env includes:
+  - `MONGODB_URI`, `MONGODB_DB`
+  - `JWT_SECRET`
+  - `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_LOGIN_SECRET`
+  - `APP_ORIGIN` (your Vercel domain)
+  - `ML_MODE=service`
+  - `ML_SERVICE_URL` (your Render ML service URL)
+  - `ML_SERVICE_TOKEN` (must match the ML service token if set)
+
+### ML service (Render, Python — no Docker)
+
+- Deploy `ml-service/` as a Python web service
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Optional (recommended): set env `ML_SERVICE_TOKEN` to a strong random string.
+  - When set, the ML service requires header `x-ml-token` for `POST /score`.
+  - Set the same value as `ML_SERVICE_TOKEN` in the backend env.
 
 ## Windows “EPERM/EBUSY/esbuild.exe locked” recovery
 

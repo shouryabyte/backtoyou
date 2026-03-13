@@ -9,6 +9,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
+    "postinstall": "npm run build",
     "lint": "node -e \"console.log('lint: not configured')\"",
     "seed:admin": "tsx src/scripts/seedAdmin.ts",
     "smoke": "tsx src/scripts/smoke.ts"

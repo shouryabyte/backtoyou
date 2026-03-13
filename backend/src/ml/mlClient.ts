@@ -32,9 +32,12 @@ export async function scoreCandidates(target: MlItemPublic, candidates: MlItemPu
   const t = setTimeout(() => controller.abort(), Math.max(250, timeoutMs));
 
   try {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (env.ML_SERVICE_TOKEN) headers["x-ml-token"] = env.ML_SERVICE_TOKEN;
+
     const res = await fetch(`${env.ML_SERVICE_URL}/score`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ target, candidates }),
       signal: controller.signal
     });

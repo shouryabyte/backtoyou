@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional, Set
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -102,7 +103,13 @@ def health() -> Dict[str, Any]:
 
 
 @app.post("/score", response_model=List[ScoreResult])
-def score(req: ScoreRequest) -> List[ScoreResult]:
+def score(req: ScoreRequest, x_ml_token: Optional[str] = Header(default=None)) -> List[ScoreResult]:
+    # Optional shared-secret auth (recommended for production).
+    # If ML_SERVICE_TOKEN is set, backend must send header: x-ml-token: <token>
+    expected = os.getenv("ML_SERVICE_TOKEN")
+    if expected and (x_ml_token or "") != expected:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
     # Build corpus from candidates (public-only) and score target vs each candidate.
     docs = [_text_blob(req.target)] + [_text_blob(c) for c in req.candidates]
 

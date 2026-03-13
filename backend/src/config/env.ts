@@ -17,6 +17,7 @@ export const env = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN ?? "7d",
   ADMIN_LOGIN_SECRET: process.env.ADMIN_LOGIN_SECRET,
   ML_SERVICE_URL: process.env.ML_SERVICE_URL ?? "http://localhost:8090",
+  ML_SERVICE_TOKEN: process.env.ML_SERVICE_TOKEN,
   HIGH_CONFIDENCE_THRESHOLD: Number(process.env.HIGH_CONFIDENCE_THRESHOLD ?? 0.9),
   PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL ?? `http://localhost:${process.env.PORT ?? 8080}`,
   UPLOAD_DIR: process.env.UPLOAD_DIR ?? "uploads",
