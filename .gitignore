@@ -9,8 +9,8 @@ build
 .turbo
 .eslintcache
 coverage
-uploads
-backend/uploads
+/uploads/
+/backend/uploads/
 
 # Python (ml-service)
 ml-service/.venv
