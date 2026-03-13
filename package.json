@@ -1,0 +1,20 @@
+{
+  "name": "backtoyou",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=20 <21"
+  },
+  "scripts": {
+    "dev": "concurrently -k \"npm -C backend run dev\" \"npm -C frontend run dev\"",
+    "build": "npm -C backend run build && npm -C frontend run build",
+    "lint": "npm -C backend run lint && npm -C frontend run lint",
+    "clean": "node -e \"const fs=require('fs'); const path=require('path'); const targets=['node_modules','backend/node_modules','frontend/node_modules','backend/dist','frontend/dist']; for (const t of targets){ fs.rmSync(path.join(process.cwd(),t),{recursive:true,force:true}); } console.log('cleaned:',targets.join(', '));\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}

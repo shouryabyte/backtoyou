@@ -1,0 +1,18 @@
+node_modules
+.DS_Store
+.env
+.env.*
+!.env.example
+dist
+build
+.vite
+.turbo
+.eslintcache
+coverage
+uploads
+backend/uploads
+
+# Python (ml-service)
+ml-service/.venv
+ml-service/__pycache__/
+ml-service/*.pyc
