@@ -20,7 +20,13 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: env.APP_ORIGIN,
+    origin: (origin, cb) => {
+      // Allow non-browser clients (curl/postman) that send no Origin header.
+      if (!origin) return cb(null, true);
+      const normalized = origin.trim().replace(/\/+$/, "");
+      if (env.APP_ORIGINS.includes(normalized)) return cb(null, true);
+      return cb(null, false);
+    },
     credentials: true
   })
 );

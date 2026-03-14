@@ -7,10 +7,27 @@ function must(name: string): string {
   return value;
 }
 
+function normalizeOrigin(s: string): string {
+  const trimmed = s.trim();
+  return trimmed.endsWith("/") ? trimmed.replace(/\/+$/, "") : trimmed;
+}
+
+function parseOrigins(raw: string): string[] {
+  return raw
+    .split(",")
+    .map((s) => normalizeOrigin(s))
+    .filter(Boolean);
+}
+
+const appOrigins = parseOrigins(process.env.APP_ORIGIN ?? "http://localhost:5173");
+
 export const env = {
   NODE_ENV: process.env.NODE_ENV ?? "development",
   PORT: Number(process.env.PORT ?? 8080),
-  APP_ORIGIN: process.env.APP_ORIGIN ?? "http://localhost:5173",
+  // Comma-separated list allowed (useful for Vercel preview + production URLs).
+  // Trailing slashes are normalized away to avoid CORS mismatches.
+  APP_ORIGIN: appOrigins[0] ?? "http://localhost:5173",
+  APP_ORIGINS: appOrigins.length ? appOrigins : ["http://localhost:5173"],
   MONGODB_URI: must("MONGODB_URI"),
   MONGODB_DB: process.env.MONGODB_DB ?? "backtoyou",
   JWT_SECRET: must("JWT_SECRET"),
