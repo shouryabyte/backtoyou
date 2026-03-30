@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import { requireAuth, getAuthUser } from "../http/middleware/auth.js";
 import { getDbUser, loadUser } from "../http/middleware/loadUser.js";
 import { HttpError } from "../http/errors.js";
-import { evaluateClaim } from "../verification/evaluateClaim.js";
+import { buildVerificationPrompts, evaluateClaim } from "../verification/evaluateClaim.js";
 import { Claim } from "../models/Claim.js";
 import { Match } from "../models/Match.js";
 import { Verification } from "../models/Verification.js";
@@ -46,6 +46,14 @@ claimsRouter.post("/", requireAuth, loadUser, async (req, res, next) => {
     const lostItem: any = (match as any).lostItemId;
     const foundItem: any = (match as any).foundItemId;
     if (String(lostItem.ownerId) !== auth.id) throw new HttpError(403, "FORBIDDEN", "Only the lost-item owner can claim");
+
+    const prompts = buildVerificationPrompts(lostItem.privateDetails);
+    for (const p of prompts) {
+      const v = (body.answers as any)?.[p.key];
+      if (typeof v !== "string" || !v.trim()) {
+        throw new HttpError(400, "MISSING_ANSWERS", "All verification answers are required");
+      }
+    }
 
     const evaluation = evaluateClaim({ lostItem, answers: body.answers });
 

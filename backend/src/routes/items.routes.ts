@@ -21,14 +21,20 @@ itemsRouter.post("/", requireAuth, loadUser, async (req, res, next) => {
     const body = z
       .object({
         type: z.enum(["LOST", "FOUND"]),
-        title: z.string().min(3),
-        description: z.string().optional(),
-        category: z.string().min(2),
+        title: z.string().trim().min(3),
+        description: z.string().trim().min(1),
+        category: z.string().trim().min(2),
         color: z.string().optional(),
-        location: z.string().optional(),
+        location: z.string().trim().min(2),
         eventAt: z.string().datetime(),
         publicDetails: z.record(z.string(), z.any()).optional(),
-        privateDetails: z.record(z.string(), z.any()).optional()
+        privateDetails: z
+          .object({
+            brand: z.string().trim().min(1),
+            uniqueMark: z.string().trim().min(1),
+            contents: z.string().trim().min(1)
+          })
+          .strict()
       })
       .parse(req.body);
 
@@ -36,13 +42,13 @@ itemsRouter.post("/", requireAuth, loadUser, async (req, res, next) => {
       ownerId: auth.id,
       type: body.type,
       title: body.title,
-      description: body.description ?? "",
+      description: body.description,
       category: body.category,
       color: body.color ?? "",
-      location: body.location ?? "",
+      location: body.location,
       eventAt: new Date(body.eventAt),
       publicDetails: body.publicDetails ?? {},
-      privateDetails: body.privateDetails ?? {},
+      privateDetails: body.privateDetails,
       images: []
     });
 

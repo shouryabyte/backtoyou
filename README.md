@@ -1,164 +1,211 @@
-# BackToYou
+# BackToYou — Explainable Lost & Found (MERN + Human Approval)
 
-Production-ready College Lost & Found system with:
+**Impact (1‑liner):** BackToYou helps campus communities recover lost items **faster and safer** by using **explainable matching** to suggest candidates, **private verification** to block false claims, and a **single admin** to approve every return (no auto-returns).
 
-- Explainable candidate matching (Python TF-IDF + cosine + rule scoring)
-- Private verification (K-out-of-N ownership questions)
-- Human-in-the-loop admin approval (never auto-return)
+---
 
-## Repo layout
+## Why this project exists (problem statement)
 
-- `frontend/`: React + TypeScript + Tailwind + React Query + Zustand + Framer Motion
-- `backend/`: Node.js + Express + MongoDB (Mongoose) + JWT/RBAC + verification + fraud controls
-- `ml-service/`: Python (FastAPI) microservice for TF-IDF/cosine/rule scoring
+Traditional lost-and-found on campus is fragmented (posters, WhatsApp groups, desk logs) and fails in predictable ways:
 
-## Docs
+- **Low recall:** people don’t see the right post at the right time.
+- **Low trust:** “prove it’s yours” is subjective and easy to game.
+- **Safety risk:** direct contact too early enables social engineering/harassment.
+- **No audit trail:** it’s hard to explain *why* a decision was made later.
 
-- `PRD.md` — complete Product Requirements Document (interview-friendly)
-- `TECHNICAL_README.md` — deep technical README + interview explanation guide
+BackToYou solves these by separating **candidate generation** from **ownership proof** and forcing a **human-in-the-loop** decision.
 
-## Explainable match scores
+---
 
-BackToYou exposes an explainable breakdown for every candidate match:
+## Solution overview (what it does)
 
-- `final_score = 0.6 * text_similarity + 0.4 * rule_score`
-- `rule_score = avg(categoryScore, colorScore, locationScore, dateScore)`
+BackToYou is a MERN platform where:
 
-API:
+1. Users report **lost** and **found** items (structured fields + optional images).
+2. The system generates **candidate matches** using classical, explainable ML:
+   - TF‑IDF text similarity + cosine similarity
+   - rule-based scoring (category/color/location/date)
+3. The **lost-item owner** submits a claim and answers **private verification** questions (K‑out‑of‑N).
+4. A **single admin** reviews:
+   - full score breakdown (explainable)
+   - verification result
+   - user risk indicators
+5. Only after admin approval:
+   - items are marked `RETURNED`
+   - a private **chat room** is created for the two users to coordinate pickup
 
-- Admin: `GET /api/admin/matches/:matchId/explanation` (full breakdown)
-- Lost-item owner: `GET /api/matches/:matchId` (confidence + short explanation; no raw scores)
+**Non‑negotiables**
+- No deep learning / CNNs
+- No auto-return decisions
+- Chat is disabled until approval
 
-Example response:
+---
 
-```json
-{
-  "lostItemId": "65e....",
-  "foundItemId": "65e....",
-  "scores": {
-    "textSimilarity": 0.72,
-    "categoryScore": 1.0,
-    "colorScore": 0.8,
-    "locationScore": 0.6,
-    "dateScore": 0.7,
-    "ruleScore": 0.78,
-    "finalScore": 0.82
-  },
-  "confidence": "Medium",
-  "confidenceLevel": "AMBIGUOUS"
-}
-```
+## Key features
 
-## Requirements
+- **Auth + RBAC:** JWT auth; server-side role enforcement; single-admin constraint.
+- **Lost/Found reporting:** structured forms + optional images (Cloudinary or local).
+- **Explainable matching:** stores numeric breakdown per match and returns safe views by role.
+- **Ownership verification:** K‑out‑of‑N evaluation using private fields only.
+- **Fraud controls:** rate limiting, suspicion scoring, blocking flags, audit logs.
+- **Admin review:** approve/reject workflow with full explainability.
+- **Secure chat:** created only after approval; only match participants can message; admin can view for moderation.
+- **Production UX:** modern dark UI, toasts, skeleton loaders, empty states, responsive pages.
 
-- Node.js 20.x LTS (enforced via `.npmrc`)
-- MongoDB (local `mongod` or MongoDB Atlas)
-- Python 3.10+ (optional, for the ML service)
+---
 
-## Local setup
-
-### 1) Start MongoDB
-
-Pick one:
-- **Local:** start `mongod` on `127.0.0.1:27017`
-- **Atlas:** use a MongoDB Atlas connection string in `backend/.env`
-
-### 2) Install JS dependencies
-
-`npm i`
-
-### 3) Configure env files
-
-- Copy `backend/.env.example` -> `backend/.env` and set `JWT_SECRET`
-- Copy `frontend/.env.example` -> `frontend/.env`
-
-### 4) Run dev servers
-
-`npm run dev`
-
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:8080`
-- ML service (optional): `http://localhost:8090` (`GET /health`, `POST /score`)
-
-### Optional: run the Python ML service locally
-
-From `ml-service/`:
-
-- `python -m venv .venv`
-- Activate venv
-- `pip install -r requirements.txt`
-- `uvicorn app.main:app --host 0.0.0.0 --port 8090`
-
-If you don’t want the Python service, set `ML_MODE=local` in `backend/.env` (backend uses the local scorer).
-
-## Admin user (local)
-
-`npm -C backend run seed:admin`
-
-Defaults come from `backend/.env`:
-
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
-- `ADMIN_LOGIN_SECRET` (required for admin login)
-
-You can reset the seeded admin password by setting `RESET_ADMIN_PASSWORD=1` and re-running the seed script.
-
-## Smoke test (end-to-end)
-
-Prereqs:
-
-- Backend running on `http://localhost:8080`
-- MongoDB connected (local or Atlas)
-
-Run:
-
-`npm -C backend run smoke`
-
-## Notes
-
-- Images use Cloudinary if `CLOUDINARY_URL` is set; otherwise stored in `backend/uploads/`.
-- Emails are logged to the console unless SMTP env vars are configured.
-
-## Production deploy (Vercel + Render + Python ML service)
+## Tech stack (what + why)
 
 ### Frontend (Vercel)
-
-- Deploy `frontend/`
-- Set env `VITE_API_BASE_URL` to your Render backend URL, e.g. `https://backtoyou-backend.onrender.com`
+- **React + Vite:** fast builds and a clean SPA architecture.
+- **Tailwind CSS:** consistent design system with rapid iteration.
+- **Zustand:** minimal global state (auth/token) without Redux overhead.
+- **TanStack Query:** API caching + polling (used for chat + dashboards).
+- **Framer Motion:** subtle motion for “real product” feel.
 
 ### Backend (Render)
+- **Node.js + Express:** pragmatic REST API with strong ecosystem support.
+- **MongoDB Atlas + Mongoose:** flexible schemas for evolving item fields; indexes for fast query patterns.
+- **JWT:** stateless auth; short-lived trust boundary.
+- **Zod:** input validation at API edges.
 
-- Deploy `backend/` as a Node web service
-- Ensure env includes:
-  - `MONGODB_URI`, `MONGODB_DB`
-  - `JWT_SECRET`
-  - `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_LOGIN_SECRET`
-  - `APP_ORIGIN` (your Vercel domain)
-  - `ML_MODE=service`
-  - `ML_SERVICE_URL` (your Render ML service URL)
-  - `ML_SERVICE_TOKEN` (must match the ML service token if set)
+### Matching (Explainable classical ML)
+- **Python FastAPI service (optional):** TF‑IDF + cosine + rule scoring.
+- **Node local fallback:** same formula using `natural` TF‑IDF so the system keeps working if ML service is down.
 
-### ML service (Render, Python — no Docker)
+### Storage + email (optional)
+- **Cloudinary** (preferred) or local uploads.
+- **Nodemailer + SMTP** (emails log to console if SMTP not set).
 
-- Deploy `ml-service/` as a Python web service
-- Set Python version to **3.12.x** (Render’s latest Python may be too new and can force source builds for `pydantic-core`)
-- Build command: `pip install -r requirements.txt`
-- Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- Optional (recommended): set env `ML_SERVICE_TOKEN` to a strong random string.
-  - When set, the ML service requires header `x-ml-token` for `POST /score`.
-  - Set the same value as `ML_SERVICE_TOKEN` in the backend env.
+---
 
-## Windows “EPERM/EBUSY/esbuild.exe locked” recovery
+## Architecture (high level)
 
-1) Close VS Code + all terminals  
-2) In an Admin PowerShell at repo root:
+```mermaid
+flowchart LR
+  U[Browser (User/Admin)] --> FE[React SPA]
+  FE -->|REST JSON| API[Express API]
+  API --> DB[(MongoDB Atlas)]
+  API -->|POST /score (optional)| MLS[Python FastAPI ML Service]
+  API --> STORE[Cloudinary or local uploads]
+  API --> MAIL[SMTP via Nodemailer (optional)]
+```
 
-`taskkill /f /im node.exe`
+---
 
-`npm run clean`
+## Matching formula (explainable by design)
 
-`npm cache clean --force`
+BackToYou stores and explains each component:
 
-Then reinstall:
+- `ruleScore = avg(categoryScore, colorScore, locationScore, dateScore)`
+- `finalScore = 0.6 * textSimilarity + 0.4 * ruleScore`
 
-`npm i`
+**Important:** even a `HIGH_CONFIDENCE` match is **not** an auto-return; it only changes how the UI labels confidence.
+
+---
+
+## API surface (key endpoints)
+
+Auth:
+- `POST /api/auth/register` (USER)
+- `POST /api/auth/login` (USER)
+- `POST /api/auth/admin/login` (ADMIN + secret key)
+- `GET /api/auth/me`
+
+Items:
+- `POST /api/items`
+- `GET /api/items?mine=1`
+
+Matches:
+- `GET /api/matches?mine=1`
+- `GET /api/matches/:id` (role-based response)
+- `GET /api/admin/matches/:id/explanation` (admin only)
+
+Claims + Admin decision:
+- `POST /api/claims`
+- `GET /api/admin/claims`
+- `POST /api/admin/claims/:id/decision`
+
+Chat (post-approval only):
+- `GET /api/chat/mine`
+- `GET /api/chat/:chatRoomId`
+- `POST /api/chat/:chatRoomId/message`
+
+---
+
+## Local development
+
+### Requirements
+- Node.js 20.x (enforced via `.npmrc`)
+- MongoDB (local `mongod` or Atlas)
+- Python 3.12.x (optional, for `ml-service/`)
+
+### Install + run
+1. Install JS deps: `npm i`
+2. Copy env files:
+   - `backend/.env.example` → `backend/.env`
+   - `frontend/.env.example` → `frontend/.env`
+3. Start dev servers: `npm run dev`
+
+### Seed the single admin (local or against Atlas)
+`npm -C backend run seed:admin`
+
+### Smoke test (end-to-end)
+`npm -C backend run smoke`
+
+---
+
+## Deployment (recommended)
+
+### Frontend (Vercel)
+- Root directory: `frontend`
+- Env:
+  - `VITE_API_URL=https://<your-backend>.onrender.com`
+
+### Backend (Render)
+- Root directory: `backend`
+- Env highlights:
+  - `APP_ORIGIN=https://<your-vercel-domain>` (comma-separated allowed; no trailing slash)
+  - `MONGODB_URI=...` / `MONGODB_DB=backtoyou`
+  - `JWT_SECRET=...`
+  - `ADMIN_EMAIL=...` / `ADMIN_PASSWORD=...` / `ADMIN_LOGIN_SECRET=...`
+  - `ML_MODE=service` or `ML_MODE=local`
+
+### ML service (Render, optional)
+- Root directory: `ml-service`
+- Python: **3.12.x**
+- Build: `pip install -r requirements.txt`
+- Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Optional security:
+  - set `ML_SERVICE_TOKEN` on the ML service
+  - set the same `ML_SERVICE_TOKEN` on the backend (sent as header `x-ml-token`)
+
+---
+
+## Resume bullet points (ATS-friendly)
+
+- Built a production-style MERN lost-and-found platform with **explainable classical ML matching** (TF‑IDF + cosine + rule scoring) and **human-in-the-loop approvals** to prevent incorrect returns.
+- Designed and enforced **server-side RBAC** with a **single-admin constraint**, plus role-based match explainability to prevent reverse-engineering and fraud.
+- Implemented **private ownership verification (K‑out‑of‑N)** and fraud controls (rate limiting, suspicion scoring, blocking) to harden against false claims.
+- Shipped a polished React UI using Tailwind + React Query + Zustand with robust loading/empty/error states and secure post-approval chat.
+- Deployed a multi-service architecture on Vercel/Render with MongoDB Atlas and an optional Python ML scorer secured via shared-secret headers.
+
+---
+
+## Future improvements
+
+- WebSocket chat (reduce polling) + typing indicators
+- Async matching pipeline (queue + worker) for high item volumes
+- Better location modeling (building proximity, geocoding)
+- Stronger abuse detection (device fingerprinting, anomaly detection)
+- Admin tooling for duplicate merging and dispute resolution
+
+---
+
+## Deep docs (interview package)
+
+- `PRD.md` — product requirements + personas + KPIs
+- `TECHNICAL_README.md` — architecture + business rules + API map
+- `SYSTEM_DESIGN.md` — request lifecycles, data model, scaling, reliability, security
+- `TECH_STACK_DEEP_DIVE.md` — what/why/alternatives/trade-offs per technology
+- `INTERVIEW_GUIDE.md` — pitches, deep Q&A, edge cases, interview positioning

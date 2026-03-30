@@ -1,0 +1,93 @@
+BackToYou Matching Engine - Synthetic Evaluation Report
+==========================================================
+Generated at: 2026-03-26T01:15:03
+
+Dataset
+-------
+Found items (candidates): 120
+Lost queries: 120
+Categories: accessories, bags, clothing, documents, electronics, jewelry, keys, sports
+Unique locations: 12
+
+Scoring
+-------
+finalScore = 0.6 * textSimilarity + 0.4 * ruleScore
+textSimilarity: TF-IDF (1-2 grams) + cosine similarity
+ruleScore components: category, color, location, date (normalized to 0..1)
+
+Metrics
+-------
+Top-1 Accuracy: 91.67%
+Top-3 Accuracy: 100.00%
+Precision: 0.3333
+Recall: 1.0000
+F1 Score: 0.5000
+MRR: 0.9569
+
+Notes
+-----
+Precision/Recall/F1 are computed at k=3 with exactly 1 relevant item per query.
+Recall equals Top-3 Accuracy in this single-relevant-item setup.
+
+Sample Non-Top1 Queries (up to 10)
+--------------------------------
+- q_0040: gt=found_0040 rank=2
+    found_0027  final=0.6360  text=0.7899  rules=0.4050
+    found_0040  final=0.6310  text=0.7217  rules=0.4950
+    found_0080  final=0.2740  text=0.2301  rules=0.3400
+    found_0103  final=0.2544  text=0.1673  rules=0.3850
+    found_0107  final=0.2377  text=0.0628  rules=0.5000
+- q_0011: gt=found_0011 rank=2
+    found_0029  final=0.5055  text=0.3592  rules=0.7250
+    found_0011  final=0.4341  text=0.2468  rules=0.7150
+    found_0023  final=0.4215  text=0.2992  rules=0.6050
+    found_0056  final=0.3230  text=0.2216  rules=0.4750
+    found_0070  final=0.3087  text=0.2245  rules=0.4350
+- q_0000: gt=found_0000 rank=2
+    found_0019  final=0.6568  text=0.6780  rules=0.6250
+    found_0000  final=0.5423  text=0.5772  rules=0.4900
+    found_0072  final=0.5251  text=0.5519  rules=0.4850
+    found_0033  final=0.5235  text=0.5692  rules=0.4550
+    found_0101  final=0.5214  text=0.5623  rules=0.4600
+- q_0069: gt=found_0069 rank=2
+    found_0108  final=0.6213  text=0.5688  rules=0.7000
+    found_0069  final=0.5524  text=0.4307  rules=0.7350
+    found_0015  final=0.4331  text=0.2251  rules=0.7450
+    found_0002  final=0.4316  text=0.4093  rules=0.4650
+    found_0009  final=0.4240  text=0.2801  rules=0.6400
+- q_0028: gt=found_0028 rank=2
+    found_0051  final=0.8936  text=0.8561  rules=0.9500
+    found_0028  final=0.8100  text=0.6900  rules=0.9900
+    found_0055  final=0.4060  text=0.2100  rules=0.7000
+    found_0091  final=0.4051  text=0.4418  rules=0.3500
+    found_0004  final=0.4019  text=0.1932  rules=0.7150
+- q_0050: gt=found_0050 rank=2
+    found_0111  final=0.9605  text=0.9474  rules=0.9800
+    found_0050  final=0.7664  text=0.7873  rules=0.7350
+    found_0074  final=0.5461  text=0.6769  rules=0.3500
+    found_0116  final=0.5429  text=0.6714  rules=0.3500
+    found_0046  final=0.3301  text=0.1802  rules=0.5550
+- q_0101: gt=found_0101 rank=2
+    found_0097  final=0.6718  text=0.7197  rules=0.6000
+    found_0101  final=0.6676  text=0.6160  rules=0.7450
+    found_0019  final=0.6384  text=0.6173  rules=0.6700
+    found_0072  final=0.5464  text=0.5973  rules=0.4700
+    found_0000  final=0.5246  text=0.5777  rules=0.4450
+- q_0059: gt=found_0059 rank=2
+    found_0003  final=0.4972  text=0.5286  rules=0.4500
+    found_0059  final=0.4595  text=0.4558  rules=0.4650
+    found_0103  final=0.4381  text=0.1001  rules=0.9450
+    found_0024  final=0.4239  text=0.3265  rules=0.5700
+    found_0021  final=0.4095  text=0.4492  rules=0.3500
+- q_0115: gt=found_0115 rank=3
+    found_0048  final=0.5540  text=0.5233  rules=0.6000
+    found_0066  final=0.5149  text=0.5081  rules=0.5250
+    found_0115  final=0.4574  text=0.4323  rules=0.4950
+    found_0057  final=0.4223  text=0.4371  rules=0.4000
+    found_0052  final=0.3937  text=0.4229  rules=0.3500
+- q_0087: gt=found_0087 rank=2
+    found_0002  final=0.4879  text=0.4431  rules=0.5550
+    found_0087  final=0.4765  text=0.4709  rules=0.4850
+    found_0102  final=0.4413  text=0.4756  rules=0.3900
+    found_0023  final=0.3704  text=0.1573  rules=0.6900
+    found_0062  final=0.3575  text=0.1725  rules=0.6350
