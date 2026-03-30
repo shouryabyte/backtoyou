@@ -10,6 +10,7 @@ import { PrimaryButton } from "../components/PrimaryButton";
 import { SecondaryButton } from "../components/SecondaryButton";
 import { MatchExplanationPanel } from "../components/MatchExplanationPanel";
 import { Link } from "react-router-dom";
+import { useAuthStore } from "../store/auth";
 
 function toneForStatus(status: string) {
   if (status === "APPROVED") return "success";
@@ -18,13 +19,18 @@ function toneForStatus(status: string) {
 }
 
 export default function AdminPageNew() {
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = user?.role === "ADMIN";
+
   const q = useQuery({
     queryKey: ["admin", "claims"],
+    enabled: isAdmin,
     queryFn: () => api<any>("/api/admin/claims")
   });
 
   const itemsQ = useQuery({
     queryKey: ["admin", "items"],
+    enabled: isAdmin,
     queryFn: () => api<any>("/api/admin/items")
   });
 
@@ -35,7 +41,7 @@ export default function AdminPageNew() {
 
   const explainQ = useQuery({
     queryKey: ["match", selected?.match?.id, "explanation"],
-    enabled: Boolean(selected?.match?.id),
+    enabled: isAdmin && Boolean(selected?.match?.id),
     queryFn: () => api<any>(`/api/admin/matches/${selected.match.id}/explanation`)
   });
 

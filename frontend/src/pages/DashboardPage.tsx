@@ -11,6 +11,12 @@ import { ProgressBar } from "../components/ProgressBar";
 
 type Item = { id: string; type: "LOST" | "FOUND"; status: string };
 
+function scoreFromMatch(m: any): number | null {
+  const v = m?.finalScore ?? m?.scores?.finalScore;
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 export default function DashboardPage() {
   const itemsQ = useQuery({
     queryKey: ["items", "mine"],
@@ -36,7 +42,7 @@ export default function DashboardPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-zinc-100">Dashboard</h1>
-          <div className="text-zinc-400 mt-2">Track your items, matches, and claims—safely and transparently.</div>
+          <div className="text-zinc-400 mt-2">Track your items, matches, and claims - safely and transparently.</div>
         </div>
         <div className="flex gap-3">
           <Link to="/report">
@@ -58,38 +64,62 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between">
           <div className="text-lg font-bold text-zinc-100">Recent matches</div>
           <Link to="/matches" className="text-sm font-semibold text-pink-300 hover:text-pink-200">
-            Explore all →
+            Explore all -&gt;
           </Link>
         </div>
 
-        {matchesQ.isLoading ? <div className="mt-4 text-zinc-400">Loading…</div> : null}
+        {matchesQ.isLoading ? <div className="mt-4 text-zinc-400">Loading...</div> : null}
         {matchesQ.data?.matches?.length ? (
           <div className="mt-4 grid gap-4">
-            {matchesQ.data.matches.slice(0, 5).map((m: any) => (
-              <div key={m.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-semibold text-zinc-100">{m.foundItem?.title}</div>
-                    <div className="text-sm text-zinc-400 mt-1">
-                      {m.lostItem?.title} ↔ {m.foundItem?.title}
+            {matchesQ.data.matches.slice(0, 5).map((m: any) => {
+              const relationship = String(m.relationship ?? "");
+              const confidenceLevel = String(m.confidenceLevel ?? "");
+              const score = scoreFromMatch(m);
+
+              const foundTitle = m.foundItem?.title ?? m.foundItemSummary?.title ?? "Found item";
+              const lostTitle = m.lostItem?.title ?? m.lostItemSummary?.title ?? "Lost item";
+
+              const title = relationship === "FOUND_REPORTER" ? foundTitle : foundTitle;
+              const subtitle =
+                relationship === "FOUND_REPORTER"
+                  ? `${lostTitle} <-> ${foundTitle}`
+                  : `${lostTitle} <-> ${foundTitle}`;
+
+              return (
+                <div key={m.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-semibold text-zinc-100">{title}</div>
+                      <div className="text-sm text-zinc-400 mt-1">{subtitle}</div>
+                      {relationship === "FOUND_REPORTER" && m.message ? (
+                        <div className="text-sm text-zinc-400 mt-1">{m.message}</div>
+                      ) : null}
                     </div>
+                    {confidenceLevel ? (
+                      <Badge tone={confidenceLevel === "HIGH_CONFIDENCE" ? "success" : "warning"}>{confidenceLevel}</Badge>
+                    ) : null}
                   </div>
-                  <Badge tone={m.confidenceLevel === "HIGH_CONFIDENCE" ? "success" : "warning"}>{m.confidenceLevel}</Badge>
+
+                  {score != null ? (
+                    <>
+                      <div className="mt-3 flex items-center justify-between">
+                        <div className="text-sm text-zinc-400">Final score</div>
+                        <div className="text-sm font-semibold text-zinc-100">{Math.round(score * 100)}%</div>
+                      </div>
+                      <div className="mt-2">
+                        <ProgressBar value={score} />
+                      </div>
+                    </>
+                  ) : null}
+
+                  <div className="mt-3">
+                    <Link to={`/matches/${m.id}`} className="text-sm font-semibold text-pink-300 hover:text-pink-200">
+                      View details -&gt;
+                    </Link>
+                  </div>
                 </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="text-sm text-zinc-400">Final score</div>
-                  <div className="text-sm font-semibold text-zinc-100">{Math.round(Number(m.finalScore) * 100)}%</div>
-                </div>
-                <div className="mt-2">
-                  <ProgressBar value={Number(m.finalScore)} />
-                </div>
-                <div className="mt-3">
-                  <Link to={`/matches/${m.id}`} className="text-sm font-semibold text-pink-300 hover:text-pink-200">
-                    View details →
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="mt-4 text-zinc-400">No matches yet. Report an item to generate candidates.</div>

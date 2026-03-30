@@ -158,6 +158,7 @@ matchesRouter.get("/", requireAuth, loadUser, async (req, res, next) => {
           relationship: "LOST_OWNER",
           lostItem: serializeItem(lostItem, viewer),
           foundItem: serializeItem(foundItem, viewer),
+          finalScore: scores.finalScore,
           confidenceLevel: m.confidenceLevel,
           confidence: confidenceLabel(scores.finalScore),
           shortExplanation: shortExplanationFromScores(scores),
@@ -170,8 +171,10 @@ matchesRouter.get("/", requireAuth, loadUser, async (req, res, next) => {
         return {
           id: String(m._id),
           relationship: "FOUND_REPORTER",
+          lostItemSummary: { id: String(lostItem._id), title: lostItem.title, category: lostItem.category },
           foundItem: serializeItem(foundItem, viewer),
           message: "Someone may claim this item. Waiting for verification.",
+          confidenceLevel: m.confidenceLevel,
           createdAt: new Date(m.createdAt).toISOString()
         };
       }
@@ -256,6 +259,7 @@ matchesRouter.get("/:id", requireAuth, loadUser, async (req, res, next) => {
           relationship: "LOST_OWNER",
           lostItem: serializeItem(lostItem, viewer),
           foundItem: serializeItem(foundItem, viewer),
+          finalScore: scores.finalScore,
           confidenceLevel: match.confidenceLevel,
           confidence: confidenceLabel(scores.finalScore),
           shortExplanation: shortExplanationFromScores(scores),
@@ -269,8 +273,10 @@ matchesRouter.get("/:id", requireAuth, loadUser, async (req, res, next) => {
       match: {
         id: String(match._id),
         relationship: "FOUND_REPORTER",
+        lostItemSummary: { id: String(lostItem._id), title: lostItem.title, category: lostItem.category },
         foundItem: serializeItem(foundItem, viewer),
         message: "Someone may claim this item. Waiting for verification.",
+        confidenceLevel: match.confidenceLevel,
         canClaim: false,
         createdAt: new Date(match.createdAt).toISOString()
       }

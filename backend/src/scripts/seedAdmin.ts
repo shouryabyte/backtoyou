@@ -4,7 +4,7 @@ import { User } from "../models/User.js";
 
 async function main() {
   await connectMongo();
-  const email = process.env.ADMIN_EMAIL ?? "admin@gmail.com";
+  const email = (process.env.ADMIN_EMAIL ?? "admin@gmail.com").trim().toLowerCase();
   const password = process.env.ADMIN_PASSWORD ?? "admin12345";
   const resetPassword = process.env.RESET_ADMIN_PASSWORD === "1";
   const allowEmailChange = process.env.ALLOW_ADMIN_EMAIL_CHANGE === "1";
@@ -21,20 +21,19 @@ async function main() {
       return;
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
-    const conflict = await User.findOne({ email: normalizedEmail }).lean();
+    const conflict = await User.findOne({ email }).lean();
     if (conflict && String(conflict._id) !== String(existingPrimary._id)) {
       // eslint-disable-next-line no-console
-      console.log("Cannot change admin email: another user already has", normalizedEmail);
+      console.log("Cannot change admin email: another user already has", email);
       return;
     }
 
-    const update: any = { $set: { email: normalizedEmail, role: "ADMIN", adminSingleton: true, "flags.isBlocked": false } };
+    const update: any = { $set: { email, role: "ADMIN", adminSingleton: true, "flags.isBlocked": false } };
     if (resetPassword) update.$set.passwordHash = await hashPassword(password);
     await User.updateOne({ _id: existingPrimary._id }, update);
 
     // eslint-disable-next-line no-console
-    console.log("Primary admin updated:", { email: normalizedEmail, password: resetPassword ? password : "(unchanged)" });
+    console.log("Primary admin updated:", { email, password: resetPassword ? password : "(unchanged)" });
     return;
   }
   const exists = await User.findOne({ email }).lean();
